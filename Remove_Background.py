@@ -44,15 +44,21 @@ def process_video(input_video_path, output_video_path, temp_path):
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(temp_path, fourcc, fps, (frame_width, frame_height))
+    out = cv2.VideoWriter(temp_path, fourcc, fps, (640, 360))  # Resize to 640x360 for optimization
 
     # Green color for background replacement
     GREEN = (0, 255, 0)
+
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    progress = 0
 
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
+
+        # Resize frame for optimization
+        frame = cv2.resize(frame, (640, 360))
 
         # Convert the frame to RGB as required by Mediapipe
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -73,6 +79,10 @@ def process_video(input_video_path, output_video_path, temp_path):
         # Write the processed frame to the temporary output video
         out.write(output_frame)
 
+        # Update progress bar
+        progress += 1
+        st.progress(progress / frame_count)
+
     # Release resources
     cap.release()
     out.release()
@@ -83,8 +93,8 @@ def process_video(input_video_path, output_video_path, temp_path):
         ffmpeg_path,
         "-i", temp_path,
         "-i", input_video_path,
-        "-c:v", "copy",
-        "-c:a", "aac",
+        "-c:v", "libx264",
+        "-c:a", "libmp3lame",
         "-strict", "experimental",
         output_video_path
     ]
@@ -112,6 +122,10 @@ if __name__ == "__main__":
             if uploaded_file is not None:
                 # Save the uploaded file locally
                 input_video_path = os.path.join("temp", uploaded_file.name)
+                if uploaded_file.size > 100 * 1024 * 1024:  # Limit to 100 MB
+                    st.error("The uploaded file is too large. Please upload a video smaller than 100 MB.")
+                    st.stop()
+
                 with open(input_video_path, "wb") as f:
                     f.write(uploaded_file.read())
 
