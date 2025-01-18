@@ -112,6 +112,8 @@ if __name__ == "__main__":
             if uploaded_file is not None:
                 # Save the uploaded file locally
                 input_video_path = os.path.join("temp", uploaded_file.name)
+                if not os.path.exists("temp"):
+                    os.makedirs("temp")
                 with open(input_video_path, "wb") as f:
                     f.write(uploaded_file.read())
 
@@ -130,9 +132,6 @@ if __name__ == "__main__":
             output_video_path = os.path.join("temp", output_video_name)
             temp_path = os.path.join("temp", "temp_video.mp4")
 
-            # Ensure temp directory exists
-            os.makedirs("temp", exist_ok=True)
-
             # Process the video
             st.write("Processing video...")
             process_video(input_video_path, output_video_path, temp_path)
@@ -143,6 +142,11 @@ if __name__ == "__main__":
             with open(output_video_path, "rb") as f:
                 st.download_button("Download Video", f, file_name=output_video_name)
 
+            # Clean up temporary files
+            if os.path.exists(input_video_path):
+                os.remove(input_video_path)
+            if os.path.exists(output_video_path):
+                os.remove(output_video_path)
+
         except Exception as e:
             st.error(f"An error occurred: {e}")
-
