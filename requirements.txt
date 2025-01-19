@@ -5,3 +5,4 @@ numpy
 yt-dlp
 imageio[ffmpeg]
 stripe
+python-dotenv
