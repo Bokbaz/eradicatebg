@@ -140,7 +140,7 @@ if __name__ == "__main__":
             st.session_state["success"] = True
         st.success("Payment successful! Proceed to upload your video.")
 
-    if payment_successful:
+    if payment_successful or ("success" in st.query_params and not st.session_state.get("success", False)):
         uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
         youtube_url = st.text_input("Or provide a YouTube video URL")
 
