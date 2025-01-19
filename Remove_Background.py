@@ -109,29 +109,37 @@ if __name__ == "__main__":
 
     # Stripe Checkout integration
     st.write("### Step 1: Payment")
-    if st.button("Pay $1 to Process Video"):
-        session = stripe.checkout.Session.create(
-            payment_method_types=['card'],
-            line_items=[{
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {
-                        'name': 'Green Screen Video Processing',
+
+    # Flag to track payment status
+    payment_successful = "success" in st.session_state and st.session_state["success"]
+
+    if not payment_successful:
+        if st.button("Pay $1 to Process Video"):
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {
+                            'name': 'Green Screen Video Processing',
+                        },
+                        'unit_amount': 100,
                     },
-                    'unit_amount': 100,
-                },
-                'quantity': 1,
-            }],
-            mode='payment',
-            success_url="https://greenscreen.streamlit.app/?success=true",
-            cancel_url="https://greenscreen.streamlit.app/?canceled=true",
-        )
-        st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url="https://greenscreen.streamlit.app/?success=true",
+                cancel_url="https://greenscreen.streamlit.app/?canceled=true",
+            )
+            st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
     # Check for payment success
     query_params = st.query_params
     if "success" in query_params:
+        st.session_state["success"] = True
         st.success("Payment successful! Proceed to upload your video.")
+
+    if payment_successful:
         uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
         youtube_url = st.text_input("Or provide a YouTube video URL")
 
@@ -167,6 +175,9 @@ if __name__ == "__main__":
                 time.sleep(1)
                 os.remove(input_video_path)
                 os.remove(output_video_path)
+
+                # Reset payment status after successful download
+                st.session_state["success"] = False
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
