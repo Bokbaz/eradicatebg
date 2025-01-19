@@ -1,4 +1,4 @@
-import mediapipe as mp
+mport mediapipe as mp
 import numpy as np
 import os
 import subprocess
@@ -9,14 +9,6 @@ import uuid
 import time
 import stripe
 import cv2  # Ensure opencv-python-headless is used
-
-# Check for libGL dependency
-try:
-    import ctypes
-    ctypes.CDLL("libGL.so.1")
-except OSError:
-    st.error("libGL.so.1 is missing. Please ensure it is installed in your environment.")
-    raise
 
 # Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
 stripe.api_key = st.secrets["stripe_secret_key"]
