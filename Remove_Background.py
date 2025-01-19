@@ -1,3 +1,4 @@
+import mediapipe as mp
 import numpy as np
 import os
 import subprocess
@@ -8,7 +9,6 @@ import uuid
 import time
 import stripe
 import cv2  # Ensure opencv-python-headless is used
-from PIL import Image
 
 # Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
 stripe.api_key = st.secrets["stripe_secret_key"]
@@ -28,7 +28,10 @@ def download_youtube_video(youtube_url, download_path):
     return output_file
 
 def process_video(input_video_path, output_video_path, temp_path):
-    # Placeholder for custom segmentation logic without Mediapipe
+    # Initialize Mediapipe solutions for selfie segmentation
+    mp_selfie_segmentation = mp.solutions.selfie_segmentation
+    selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation(model_selection=1)
+
     cap = cv2.VideoCapture(input_video_path)
     if not cap.isOpened():
         raise Exception(f"Could not open the video file '{input_video_path}'. Ensure it is valid.")
@@ -46,8 +49,9 @@ def process_video(input_video_path, output_video_path, temp_path):
         if not ret:
             break
 
-        # Custom segmentation (replace this with your model)
-        mask = np.ones((frame_height, frame_width), dtype=bool)  # Example mask
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        result = selfie_segmentation.process(frame_rgb)
+        mask = result.segmentation_mask > 0.5
 
         green_background = np.zeros(frame.shape, dtype=np.uint8)
         green_background[:] = GREEN
@@ -106,6 +110,7 @@ if __name__ == "__main__":
     # Stripe Checkout integration
     st.write("### Step 1: Payment")
 
+    # Flag to track payment status
     payment_successful = st.session_state.get("success", False)
 
     if not payment_successful:
