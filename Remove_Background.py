@@ -8,6 +8,16 @@ import streamlit as st
 import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Stripe API key setup
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+if not stripe.api_key:
+    raise ValueError("Stripe secret key not found! Set it as an environment variable.")
 
 def download_youtube_video(youtube_url, download_path):
     """Download a YouTube video using yt_dlp."""
@@ -99,41 +109,70 @@ if __name__ == "__main__":
     )
 
     st.title("Green Screen Video Processor")
-    uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
-    youtube_url = st.text_input("Or provide a YouTube video URL")
 
-    if st.button("Process Video"):
-        try:
-            if uploaded_file:
-                input_video_path = os.path.join("temp", uploaded_file.name)
-                if not os.path.exists("temp"):
-                    os.makedirs("temp")
-                with open(input_video_path, "wb") as f:
-                    f.write(uploaded_file.read())
-                del uploaded_file
+    # Stripe Checkout integration
+    st.write("### Step 1: Payment")
+    if st.button("Pay $5 to Process Video"):
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': 'Green Screen Video Processing',
+                    },
+                    'unit_amount': 500,
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url="http://localhost:8501?success=true",
+            cancel_url="http://localhost:8501?canceled=true",
+        )
+        st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
-            elif youtube_url:
-                input_video_path = download_youtube_video(youtube_url, "temp")
+    # Check for payment success
+    query_params = st.experimental_get_query_params()
+    if "success" in query_params:
+        st.success("Payment successful! Proceed to upload your video.")
+        uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
+        youtube_url = st.text_input("Or provide a YouTube video URL")
 
-            else:
-                st.error("Please upload a video or provide a YouTube URL.")
-                st.stop()
+        if st.button("Process Video"):
+            try:
+                if uploaded_file:
+                    input_video_path = os.path.join("temp", uploaded_file.name)
+                    if not os.path.exists("temp"):
+                        os.makedirs("temp")
+                    with open(input_video_path, "wb") as f:
+                        f.write(uploaded_file.read())
+                    del uploaded_file
 
-            unique_id = str(uuid.uuid4())
-            temp_path = os.path.join("temp", f"temp_video_{unique_id}.mp4")
-            output_video_path = os.path.join("temp", f"output_{unique_id}.mp4")
+                elif youtube_url:
+                    input_video_path = download_youtube_video(youtube_url, "temp")
 
-            st.write("Processing video...")
-            process_video(input_video_path, output_video_path, temp_path)
+                else:
+                    st.error("Please upload a video or provide a YouTube URL.")
+                    st.stop()
 
-            st.write("Processing complete. Download your green screen video below:")
-            st.video(output_video_path)
-            with open(output_video_path, "rb") as f:
-                st.download_button("Download Video", f, file_name=f"output_{unique_id}.mp4")
+                unique_id = str(uuid.uuid4())
+                temp_path = os.path.join("temp", f"temp_video_{unique_id}.mp4")
+                output_video_path = os.path.join("temp", f"output_{unique_id}.mp4")
 
-            time.sleep(1)
-            os.remove(input_video_path)
-            os.remove(output_video_path)
+                st.write("Processing video...")
+                process_video(input_video_path, output_video_path, temp_path)
 
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+                st.write("Processing complete. Download your green screen video below:")
+                st.video(output_video_path)
+                with open(output_video_path, "rb") as f:
+                    st.download_button("Download Video", f, file_name=f"output_{unique_id}.mp4")
+
+                time.sleep(1)
+                os.remove(input_video_path)
+                os.remove(output_video_path)
+
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+
+    elif "canceled" in query_params:
+        st.warning("Payment canceled. Please try again.")
