@@ -8,7 +8,7 @@ import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
 import stripe
-import cv2  # Ensure opencv-python-headless is used
+import cv2 as cv2_headless  # Ensure opencv-python-headless is used
 
 # Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
 stripe.api_key = st.secrets["stripe_secret_key"]
@@ -32,7 +32,7 @@ def process_video(input_video_path, output_video_path, temp_path):
     mp_selfie_segmentation = mp.solutions.selfie_segmentation
     selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation(model_selection=1)
 
-    cap = cv2.VideoCapture(input_video_path)
+    cap = cv2_headless.VideoCapture(input_video_path)
     if not cap.isOpened():
         raise Exception(f"Could not open the video file '{input_video_path}'. Ensure it is valid.")
 
@@ -40,7 +40,7 @@ def process_video(input_video_path, output_video_path, temp_path):
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = int(cap.get(cv2.CAP_PROP_FPS))
 
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2_headless.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(temp_path, fourcc, fps, (frame_width, frame_height))
 
     GREEN = (0, 255, 0)
@@ -49,7 +49,7 @@ def process_video(input_video_path, output_video_path, temp_path):
         if not ret:
             break
 
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame_rgb = cv2_headless.cvtColor(frame, cv2_headless.COLOR_BGR2RGB)
         result = selfie_segmentation.process(frame_rgb)
         mask = result.segmentation_mask > 0.5
 
@@ -172,16 +172,14 @@ if __name__ == "__main__":
                 st.video(output_video_path)
                 with open(output_video_path, "rb") as f:
                     st.download_button("Download Video", f, file_name=f"output_{unique_id}.mp4")
-                st.session_state["success"] = False
-                st.experimental_rerun()
 
                 time.sleep(1)
                 os.remove(input_video_path)
                 os.remove(output_video_path)
 
-                # Reset session state manually
+                # Reset session state and ensure a page reload
                 st.session_state["success"] = False
-                st.write("The payment session has been reset. Please pay again to process another video.")
+                st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
