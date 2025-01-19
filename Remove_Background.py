@@ -171,6 +171,8 @@ if __name__ == "__main__":
                 st.video(output_video_path)
                 with open(output_video_path, "rb") as f:
                     st.download_button("Download Video", f, file_name=f"output_{unique_id}.mp4")
+                st.session_state["success"] = False
+                st.experimental_rerun()
 
                 time.sleep(1)
                 os.remove(input_video_path)
