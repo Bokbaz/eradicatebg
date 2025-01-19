@@ -8,6 +8,8 @@ import streamlit as st
 import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
+import stripe
+import python-dotenv
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
