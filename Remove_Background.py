@@ -8,7 +8,7 @@ import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
 import stripe
-import cv2 as cv2_headless
+import cv2  # Ensure opencv-python-headless is used
 
 # Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
 stripe.api_key = st.secrets["stripe_secret_key"]
