@@ -177,7 +177,7 @@ if __name__ == "__main__":
                 os.remove(output_video_path)
 
                 st.session_state["success"] = False
-st.experimental_rerun()
+                st.experimental_rerun()
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
