@@ -1,4 +1,3 @@
-import mediapipe as mp
 import numpy as np
 import os
 import subprocess
@@ -16,8 +15,14 @@ stripe.api_key = st.secrets["stripe_secret_key"]
 if not stripe.api_key:
     raise ValueError("Stripe secret key not found! Set it in Streamlit secrets.")
 
+def ensure_directory_exists(directory):
+    """Ensure a directory exists."""
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
 def download_youtube_video(youtube_url, download_path):
     """Download a YouTube video using yt_dlp."""
+    ensure_directory_exists(download_path)
     ydl_opts = {
         'format': 'mp4',
         'outtmpl': os.path.join(download_path, '%(title)s.%(ext)s')
@@ -28,10 +33,7 @@ def download_youtube_video(youtube_url, download_path):
     return output_file
 
 def process_video(input_video_path, output_video_path, temp_path):
-    # Initialize Mediapipe solutions for selfie segmentation
-    mp_selfie_segmentation = mp.solutions.selfie_segmentation
-    selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation(model_selection=1)
-
+    ensure_directory_exists("temp")
     cap = cv2.VideoCapture(input_video_path)
     if not cap.isOpened():
         raise Exception(f"Could not open the video file '{input_video_path}'. Ensure it is valid.")
@@ -49,9 +51,8 @@ def process_video(input_video_path, output_video_path, temp_path):
         if not ret:
             break
 
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = selfie_segmentation.process(frame_rgb)
-        mask = result.segmentation_mask > 0.5
+        # Placeholder segmentation logic
+        mask = np.ones((frame_height, frame_width), dtype=bool)
 
         green_background = np.zeros(frame.shape, dtype=np.uint8)
         green_background[:] = GREEN
@@ -62,11 +63,13 @@ def process_video(input_video_path, output_video_path, temp_path):
     out.release()
 
     ffmpeg_path = ffmpeg_lib.get_ffmpeg_exe()
-    ffmpeg_command = [
+    result = subprocess.run([
         ffmpeg_path, "-i", temp_path, "-i", input_video_path,
         "-c:v", "copy", "-c:a", "aac", "-strict", "experimental", output_video_path
-    ]
-    subprocess.run(ffmpeg_command)
+    ], capture_output=True, text=True)
+
+    if result.returncode != 0:
+        raise Exception(f"FFmpeg failed with error: {result.stderr}")
 
     if os.path.exists(temp_path):
         os.remove(temp_path)
@@ -110,7 +113,6 @@ if __name__ == "__main__":
     # Stripe Checkout integration
     st.write("### Step 1: Payment")
 
-    # Flag to track payment status
     payment_successful = st.session_state.get("success", False)
 
     if not payment_successful:
@@ -147,8 +149,7 @@ if __name__ == "__main__":
             try:
                 if uploaded_file:
                     input_video_path = os.path.join("temp", uploaded_file.name)
-                    if not os.path.exists("temp"):
-                        os.makedirs("temp")
+                    ensure_directory_exists("temp")
                     with open(input_video_path, "wb") as f:
                         f.write(uploaded_file.read())
                     del uploaded_file
@@ -183,3 +184,4 @@ if __name__ == "__main__":
 
     elif "canceled" in query_params:
         st.warning("Payment canceled. Please try again.")
+
