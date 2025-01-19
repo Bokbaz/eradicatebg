@@ -136,7 +136,8 @@ if __name__ == "__main__":
     # Check for payment success
     query_params = st.query_params
     if "success" in query_params:
-        st.session_state["success"] = True
+        if "success" not in st.session_state:
+            st.session_state["success"] = True
         st.success("Payment successful! Proceed to upload your video.")
 
     if payment_successful:
