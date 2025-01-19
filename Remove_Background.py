@@ -65,6 +65,39 @@ def process_video(input_video_path, output_video_path, temp_path):
         os.remove(temp_path)
 
 if __name__ == "__main__":
+    st.set_page_config(page_title="Green Screen Video Processor", layout="wide", initial_sidebar_state="expanded")
+
+    # Apply custom styles for deep jade green theme
+    st.markdown(
+        """
+        <style>
+        body {
+            background-color: #004d40;
+            color: #e0f2f1;
+        }
+        .stButton>button {
+            background-color: #00796b;
+            color: white;
+            border: None;
+        }
+        .stButton>button:hover {
+            background-color: #004d40;
+            color: #e0f2f1;
+        }
+        .stTextInput>div>input {
+            background-color: #004d40;
+            color: #e0f2f1;
+            border: 1px solid #00796b;
+        }
+        .stTextInput>div>input:focus {
+            outline: none;
+            border: 1px solid #004d40;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.title("Green Screen Video Processor")
     uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
     youtube_url = st.text_input("Or provide a YouTube video URL")
