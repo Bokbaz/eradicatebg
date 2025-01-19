@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
     # Stripe Checkout integration
     st.write("### Step 1: Payment")
-    if st.button("Pay $5 to Process Video"):
+    if st.button("Pay $1 to Process Video"):
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
