@@ -134,8 +134,9 @@ if __name__ == "__main__":
             st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
     query_params = st.query_params
-    if "success" in query_params and not payment_successful:
+    if "success" in query_params and not payment_successful and st.session_state.get("stripe_session_verified", False):
         st.session_state["success"] = True
+        st.session_state["stripe_session_verified"] = False
         st.success("Payment successful! Proceed to upload your video.")
 
     if st.session_state.get("success", False):
