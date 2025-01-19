@@ -9,16 +9,12 @@ import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
 import stripe
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Stripe API key setup
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+# Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
+stripe.api_key = st.secrets["stripe_secret_key"]
 
 if not stripe.api_key:
-    raise ValueError("Stripe secret key not found! Set it as an environment variable.")
+    raise ValueError("Stripe secret key not found! Set it in Streamlit secrets.")
 
 def download_youtube_video(youtube_url, download_path):
     """Download a YouTube video using yt_dlp."""
@@ -177,3 +173,4 @@ if __name__ == "__main__":
 
     elif "canceled" in query_params:
         st.warning("Payment canceled. Please try again.")
+
