@@ -3,5 +3,4 @@ streamlit
 stripe
 yt-dlp
 imageio[ffmpeg]
-Pillow
 opencv-python-headless
