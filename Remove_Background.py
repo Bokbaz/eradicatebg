@@ -111,7 +111,7 @@ if __name__ == "__main__":
     st.write("### Step 1: Payment")
 
     # Flag to track payment status
-    payment_successful = "success" in st.session_state and st.session_state["success"]
+    payment_successful = st.session_state.get("success", False)
 
     if not payment_successful:
         if st.button("Pay $1 to Process Video"):
@@ -128,19 +128,18 @@ if __name__ == "__main__":
                     'quantity': 1,
                 }],
                 mode='payment',
-                success_url="https://greenscreen.streamlit.app/?success=true",
-                cancel_url="https://greenscreen.streamlit.app/?canceled=true",
+                success_url="https://greenscreen.streamlit.app?success=true",
+                cancel_url="https://greenscreen.streamlit.app?canceled=true",
             )
             st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
-    # Check for payment success
     query_params = st.query_params
-    if "success" in query_params:
-        if "success" not in st.session_state:
-            st.session_state["success"] = True
+    if "success" in query_params and not payment_successful:
+        st.session_state["success"] = True
         st.success("Payment successful! Proceed to upload your video.")
 
-    if payment_successful or ("success" in st.query_params and not st.session_state.get("success", False)):
+    if st.session_state.get("success", False):
+        st.write("### Step 2: Upload or Provide Video URL")
         uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
         youtube_url = st.text_input("Or provide a YouTube video URL")
 
@@ -177,7 +176,6 @@ if __name__ == "__main__":
                 os.remove(input_video_path)
                 os.remove(output_video_path)
 
-                # Reset payment status after successful download
                 st.session_state["success"] = False
 
             except Exception as e:
