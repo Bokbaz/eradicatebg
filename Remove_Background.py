@@ -1,4 +1,3 @@
-import cv2
 import mediapipe as mp
 import numpy as np
 import os
@@ -9,6 +8,7 @@ import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
 import stripe
+import cv2
 
 # Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
 stripe.api_key = st.secrets["stripe_secret_key"]
@@ -173,4 +173,3 @@ if __name__ == "__main__":
 
     elif "canceled" in query_params:
         st.warning("Payment canceled. Please try again.")
-
