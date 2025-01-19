@@ -1,8 +1,7 @@
-streamlit
-opencv-python-headless
-mediapipe
 numpy
+streamlit
+stripe
 yt-dlp
 imageio[ffmpeg]
-stripe
-python-dotenv
+Pillow
+opencv-python-headless
