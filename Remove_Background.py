@@ -118,7 +118,7 @@ if __name__ == "__main__":
                     'product_data': {
                         'name': 'Green Screen Video Processing',
                     },
-                    'unit_amount': 500,
+                    'unit_amount': 100,
                 },
                 'quantity': 1,
             }],
