@@ -1,4 +1,4 @@
-mport mediapipe as mp
+import mediapipe as mp
 import numpy as np
 import os
 import subprocess
