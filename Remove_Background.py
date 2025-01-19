@@ -46,17 +46,42 @@ def process_video(input_video_path, output_video_path, temp_path):
     out = cv2.VideoWriter(temp_path, fourcc, fps, (frame_width, frame_height))
 
     GREEN = (0, 255, 0)
+    BACKGROUND_COLOR = [255, 255, 255]  # Example: White background
+    COLOR_THRESHOLD = 60  # Adjust as needed
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Placeholder segmentation logic
-        mask = np.ones((frame_height, frame_width), dtype=bool)
+        # Convert the frame to HSV color space for easier color segmentation
+        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        background_color_hsv = cv2.cvtColor(np.uint8([[BACKGROUND_COLOR]]), cv2.COLOR_BGR2HSV)[0][0]
 
+        # Create a mask for the background color
+        lower_bound = np.array([
+            max(0, background_color_hsv[0] - COLOR_THRESHOLD),
+            max(0, background_color_hsv[1] - COLOR_THRESHOLD),
+            max(0, background_color_hsv[2] - COLOR_THRESHOLD)
+        ])
+        upper_bound = np.array([
+            min(179, background_color_hsv[0] + COLOR_THRESHOLD),
+            min(255, background_color_hsv[1] + COLOR_THRESHOLD),
+            min(255, background_color_hsv[2] + COLOR_THRESHOLD)
+        ])
+
+        mask = cv2.inRange(hsv_frame, lower_bound, upper_bound)
+        mask_inv = cv2.bitwise_not(mask)
+
+        # Apply the green screen background
         green_background = np.zeros(frame.shape, dtype=np.uint8)
         green_background[:] = GREEN
-        output_frame = np.where(mask[:, :, None], frame, green_background)
+
+        # Combine the original frame with the green background
+        fg = cv2.bitwise_and(frame, frame, mask=mask_inv)
+        bg = cv2.bitwise_and(green_background, green_background, mask=mask)
+        output_frame = cv2.add(fg, bg)
+
         out.write(output_frame)
 
     cap.release()
@@ -184,4 +209,3 @@ if __name__ == "__main__":
 
     elif "canceled" in query_params:
         st.warning("Payment canceled. Please try again.")
-
