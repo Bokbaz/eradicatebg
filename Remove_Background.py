@@ -176,8 +176,9 @@ if __name__ == "__main__":
                 os.remove(input_video_path)
                 os.remove(output_video_path)
 
+                # Reset session state manually
                 st.session_state["success"] = False
-                st.experimental_rerun()
+                st.write("The payment session has been reset. Please pay again to process another video.")
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
