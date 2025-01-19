@@ -123,8 +123,8 @@ if __name__ == "__main__":
                 'quantity': 1,
             }],
             mode='payment',
-            success_url="http://localhost:8501?success=true",
-            cancel_url="http://localhost:8501?canceled=true",
+            success_url="https://greenscreen.streamlit.app/?success=true",
+            cancel_url="https://greenscreen.streamlit.app/?canceled=true",
         )
         st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
