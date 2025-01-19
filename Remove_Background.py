@@ -1,4 +1,3 @@
-import mediapipe as mp
 import numpy as np
 import os
 import subprocess
@@ -8,7 +7,7 @@ import imageio_ffmpeg as ffmpeg_lib
 import uuid
 import time
 import stripe
-import cv2  # Ensure opencv-python-headless is used
+from PIL import Image
 
 # Retrieve Stripe secret key from Streamlit's secrets management (TOML format)
 stripe.api_key = st.secrets["stripe_secret_key"]
@@ -28,10 +27,7 @@ def download_youtube_video(youtube_url, download_path):
     return output_file
 
 def process_video(input_video_path, output_video_path, temp_path):
-    # Initialize Mediapipe solutions for selfie segmentation
-    mp_selfie_segmentation = mp.solutions.selfie_segmentation
-    selfie_segmentation = mp_selfie_segmentation.SelfieSegmentation(model_selection=1)
-
+    # Placeholder for custom segmentation logic without Mediapipe
     cap = cv2.VideoCapture(input_video_path)
     if not cap.isOpened():
         raise Exception(f"Could not open the video file '{input_video_path}'. Ensure it is valid.")
@@ -49,9 +45,8 @@ def process_video(input_video_path, output_video_path, temp_path):
         if not ret:
             break
 
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        result = selfie_segmentation.process(frame_rgb)
-        mask = result.segmentation_mask > 0.5
+        # Custom segmentation (replace this with your model)
+        mask = np.ones((frame_height, frame_width), dtype=bool)  # Example mask
 
         green_background = np.zeros(frame.shape, dtype=np.uint8)
         green_background[:] = GREEN
@@ -110,7 +105,6 @@ if __name__ == "__main__":
     # Stripe Checkout integration
     st.write("### Step 1: Payment")
 
-    # Flag to track payment status
     payment_successful = st.session_state.get("success", False)
 
     if not payment_successful:
@@ -134,9 +128,8 @@ if __name__ == "__main__":
             st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
     query_params = st.query_params
-    if "success" in query_params and not payment_successful and st.session_state.get("stripe_session_verified", False):
+    if "success" in query_params and not payment_successful:
         st.session_state["success"] = True
-        st.session_state["stripe_session_verified"] = False
         st.success("Payment successful! Proceed to upload your video.")
 
     if st.session_state.get("success", False):
@@ -177,9 +170,7 @@ if __name__ == "__main__":
                 os.remove(input_video_path)
                 os.remove(output_video_path)
 
-                # Reset session state and ensure a page reload
                 st.session_state["success"] = False
-                st.markdown('<meta http-equiv="refresh" content="0">', unsafe_allow_html=True)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
