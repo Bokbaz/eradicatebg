@@ -129,7 +129,7 @@ if __name__ == "__main__":
         st.markdown(f"[Click here to pay]({session.url})", unsafe_allow_html=True)
 
     # Check for payment success
-    query_params = st.query_params()
+    query_params = st.query_params
     if "success" in query_params:
         st.success("Payment successful! Proceed to upload your video.")
         uploaded_file = st.file_uploader("Upload a video file", type=["mp4"])
